@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'screens/songs_screen.dart';
+import 'screens/playlists_screen.dart';
 import 'screens/profile_screen.dart';
 
 void main() {
@@ -31,7 +32,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeScreen(),
+    const SongsScreen(),
+    const PlaylistsScreen(),
     const ProfileScreen(),
   ];
 
@@ -42,20 +44,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         selectedItemColor: Colors.green,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_music),
-            label: 'Плейліст',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Профіль',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.music_note), label: 'Пісні'),
+          BottomNavigationBarItem(icon: Icon(Icons.library_music), label: 'Плейлисти'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Профіль'),
         ],
       ),
     );
