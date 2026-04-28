@@ -14,7 +14,6 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   final Repository _repository = Repository();
   List<Song> _favoriteSongs = [];
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -26,46 +25,32 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final favIds = await _repository.getFavorites();
     setState(() {
       _favoriteSongs = allAvailableSongs.where((s) => favIds.contains(s.id)).toList();
-      _isLoading = false;
     });
-  }
-
-  Future<void> _removeFromFavorites(String songId) async {
-    await _repository.toggleFavorite(songId);
-    await _loadFavorites();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Улюблені пісні')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _favoriteSongs.isEmpty
-          ? const Center(child: Text('Тут поки порожньо'))
+      body: _favoriteSongs.isEmpty
+          ? const Center(child: Text('У вас ще немає улюблених пісень'))
           : ListView.builder(
         itemCount: _favoriteSongs.length,
         itemBuilder: (context, index) {
           final song = _favoriteSongs[index];
-          return Dismissible(
-            key: Key(song.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              child: const Icon(Icons.favorite_border, color: Colors.white),
-            ),
-            onDismissed: (direction) => _removeFromFavorites(song.id),
-            child: ListTile(
-              leading: const Icon(Icons.music_note, color: Colors.green),
-              title: Text(song.title),
-              subtitle: Text(song.artist.name),
-              trailing: const Icon(Icons.play_arrow),
-              onTap: () => Navigator.push(
+          return ListTile(
+            leading: const Icon(Icons.music_note, color: Colors.green),
+            title: Text(song.title),
+            subtitle: Text(song.artist.name),
+            trailing: const Icon(Icons.play_arrow),
+            onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SongDetailScreen(song: song)),
-              ),
+                MaterialPageRoute(
+                    builder: (_) => SongDetailScreen(
+                      songs: _favoriteSongs,
+                      initialIndex: index,
+                    )
+                )
             ),
           );
         },

@@ -12,28 +12,13 @@ final Album abbeyRoad = Album(id: 'al3', title: 'Abbey Road', artist: theBeatles
 final Album backInBlack = Album(id: 'al4', title: 'Back in Black', artist: acdc, releaseYear: 1980);
 final Album machineHead = Album(id: 'al5', title: 'Machine Head', artist: deepPurple, releaseYear: 1972);
 
-final Song song1 = Song(id: 's1', title: 'Stairway to Heaven', artist: ledZeppelin, album: ledZeppelinIV, durationInSeconds: 482, isFavorite: false);
-final Song song2 = Song(id: 's2', title: 'Money', artist: pinkFloyd, album: darkSide, durationInSeconds: 382, isFavorite: false);
-final Song song3 = Song(id: 's3', title: 'Come Together', artist: theBeatles, album: abbeyRoad, durationInSeconds: 259, isFavorite: false);
-final Song song4 = Song(id: 's4', title: 'Back in Black', artist: acdc, album: backInBlack, durationInSeconds: 255, isFavorite: false);
-final Song song5 = Song(id: 's5', title: 'Smoke on the Water', artist: deepPurple, album: machineHead, durationInSeconds: 340, isFavorite: false);
+final Song song1 = Song(id: 's1', title: 'Stairway to Heaven', artist: ledZeppelin, album: ledZeppelinIV, audioUrl: 'http://10.0.2.2:3000/music/track1.mp3');
+final Song song2 = Song(id: 's2', title: 'Money', artist: pinkFloyd, album: darkSide, audioUrl: 'http://10.0.2.2:3000/music/track2.mp3');
+final Song song3 = Song(id: 's3', title: 'Come Together', artist: theBeatles, album: abbeyRoad, audioUrl: 'http://10.0.2.2:3000/music/track3.mp3');
+final Song song4 = Song(id: 's4', title: 'Back in Black', artist: acdc, album: backInBlack, audioUrl: 'http://10.0.2.2:3000/music/track4.mp3');
+final Song song5 = Song(id: 's5', title: 'Smoke on the Water', artist: deepPurple, album: machineHead, audioUrl: 'http://10.0.2.2:3000/music/track5.mp3');
 
 final List<Song> allAvailableSongs = [song1, song2, song3, song4, song5];
-
-final List<Playlist> initialPlaylists = [
-  Playlist(
-    id: 'p1',
-    title: 'Golden Rock Era',
-    description: 'Легендарні хіти 60-70х років.',
-    songs: [song1, song2, song3, song5],
-  ),
-  Playlist(
-    id: 'p2',
-    title: 'Hard Rock Classics',
-    description: 'Найпотужніші гітарні рифи.',
-    songs: [song1, song4, song5],
-  ),
-];
 
 final UserProfile currentUser = UserProfile(
   username: 'RockFan_80',

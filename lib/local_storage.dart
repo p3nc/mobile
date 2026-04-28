@@ -10,15 +10,12 @@ class LocalStorage {
     final prefs = await SharedPreferences.getInstance();
     final String? data = prefs.getString(_playlistsKey);
     if (data == null) return [];
-
-    final List<dynamic> jsonList = jsonDecode(data);
-    return jsonList.map((json) => Playlist.fromJson(json)).toList();
+    return (jsonDecode(data) as List).map((json) => Playlist.fromJson(json)).toList();
   }
 
   Future<void> savePlaylists(List<Playlist> playlists) async {
     final prefs = await SharedPreferences.getInstance();
-    final String data = jsonEncode(playlists.map((p) => p.toJson()).toList());
-    await prefs.setString(_playlistsKey, data);
+    await prefs.setString(_playlistsKey, jsonEncode(playlists.map((p) => p.toJson()).toList()));
   }
 
   Future<void> updatePlaylist(Playlist updatedPlaylist) async {
@@ -44,5 +41,11 @@ class LocalStorage {
   Future<void> saveFavoriteSongIds(List<String> ids) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_favoritesKey, ids);
+  }
+
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_playlistsKey);
+    await prefs.remove(_favoritesKey);
   }
 }

@@ -95,3 +95,17 @@ app.*.map.json
 !**/ios/**/default.mode2v3
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+
+# Server dependencies
+server/node_modules/
+server/npm-debug.log*
+server/yarn-error.log*
+
+# Server environment and DB (if any)
+server/.env
+server/db.json
+
+server/uploads/*.mp3
+
+# MacOS files
+.DS_Store
