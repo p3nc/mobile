@@ -1,48 +1,77 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'models.dart';
-import 'api_service.dart';
-import 'local_storage.dart';
+import 'auth_service.dart';
 
 class Repository {
-  final LocalStorage _storage = LocalStorage();
-  final ApiService _api = ApiService();
+  static const String baseUrl = 'http://192.168.0.188:3000/api';
+  final AuthService _auth = AuthService();
+
+  Future<Map<String, String>> _headers() async {
+    final token = await _auth.getToken();
+    return {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};
+  }
+
+  // ══ PLAYLISTS ══
 
   Future<List<Playlist>> getPlaylists() async {
-    List<Playlist> data = await _api.fetchPlaylists();
-    await _storage.savePlaylists(data);
-    return data;
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/playlists'), headers: await _headers());
+      if (res.statusCode != 200) return [];
+      return (jsonDecode(res.body) as List).map((j) => Playlist.fromJson(j)).toList();
+    } catch (_) { return []; }
   }
 
   Future<void> addPlaylist(Playlist playlist) async {
-    final playlists = await _storage.getAllPlaylists();
-    playlists.add(playlist);
-    await _storage.savePlaylists(playlists);
-    await syncPlaylist(playlist);
+    try {
+      await http.post(Uri.parse('$baseUrl/playlists'),
+          headers: await _headers(), body: jsonEncode(playlist.toJson()));
+    } catch (_) {}
   }
 
   Future<void> syncPlaylist(Playlist p) async {
-    p.syncStatus = 'pending';
-    await _storage.updatePlaylist(p);
-    if (await _api.syncPlaylist(p)) {
-      p.syncStatus = 'synced';
-      await _storage.updatePlaylist(p);
-    }
+    try {
+      await http.post(Uri.parse('$baseUrl/playlists/sync'),
+          headers: await _headers(), body: jsonEncode(p.toJson()));
+    } catch (_) {}
   }
 
   Future<void> removePlaylist(String id) async {
-    await _storage.deletePlaylist(id);
-    await _api.deletePlaylist(id);
+    try {
+      await http.delete(Uri.parse('$baseUrl/playlists/$id'), headers: await _headers());
+    } catch (_) {}
   }
+
+  // ══ FAVORITES ══
 
   Future<List<String>> getFavorites() async {
-    final favs = await _api.fetchFavorites();
-    await _storage.saveFavoriteSongIds(favs);
-    return favs;
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/favorites'), headers: await _headers());
+      if (res.statusCode != 200) return [];
+      return List<String>.from(jsonDecode(res.body));
+    } catch (_) { return []; }
   }
 
-  Future<void> toggleFavorite(String songId) async {
-    final favs = await _storage.getFavoriteSongIds();
-    if (favs.contains(songId)) favs.remove(songId); else favs.add(songId);
-    await _storage.saveFavoriteSongIds(favs);
-    await _api.toggleFavorite(songId);
+  Future<void> toggleFavorite(String songId, {String? title, String? artist}) async {
+    try {
+      await http.post(Uri.parse('$baseUrl/favorites/toggle'),
+          headers: await _headers(), body: jsonEncode({'songId': songId}));
+    } catch (_) {}
+  }
+
+  // ══ ACTIVITY ══
+
+  Future<List<Map<String, dynamic>>> getActivity() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/activity'), headers: await _headers());
+      if (res.statusCode != 200) return [];
+      return List<Map<String, dynamic>>.from(jsonDecode(res.body));
+    } catch (_) { return []; }
+  }
+
+  Future<void> clearActivity() async {
+    try {
+      await http.delete(Uri.parse('$baseUrl/activity'), headers: await _headers());
+    } catch (_) {}
   }
 }

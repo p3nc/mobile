@@ -6,9 +6,7 @@ import 'song_detail_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
-
-  @override
-  State<FavoritesScreen> createState() => _FavoritesScreenState();
+  @override State<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
@@ -28,6 +26,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     });
   }
 
+  Future<void> _removeFavorite(Song song) async {
+    await _repository.toggleFavorite(song.id, title: song.title, artist: song.artist.name);
+    _loadFavorites();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,19 +41,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         itemCount: _favoriteSongs.length,
         itemBuilder: (context, index) {
           final song = _favoriteSongs[index];
-          return ListTile(
-            leading: const Icon(Icons.music_note, color: Colors.green),
-            title: Text(song.title),
-            subtitle: Text(song.artist.name),
-            trailing: const Icon(Icons.play_arrow),
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => SongDetailScreen(
-                      songs: _favoriteSongs,
-                      initialIndex: index,
-                    )
-                )
+          return Dismissible(
+            key: Key(song.id),
+            background: Container(color: Colors.red, alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 16),
+                child: const Icon(Icons.delete, color: Colors.white)),
+            onDismissed: (_) => _removeFavorite(song),
+            child: ListTile(
+              leading: const Icon(Icons.music_note, color: Colors.green),
+              title: Text(song.title),
+              subtitle: Text(song.artist.name),
+              trailing: const Icon(Icons.play_arrow),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => SongDetailScreen(songs: _favoriteSongs, initialIndex: index))),
             ),
           );
         },

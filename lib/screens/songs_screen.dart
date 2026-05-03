@@ -6,9 +6,7 @@ import 'song_detail_screen.dart';
 
 class SongsScreen extends StatefulWidget {
   const SongsScreen({super.key});
-
-  @override
-  State<SongsScreen> createState() => _SongsScreenState();
+  @override State<SongsScreen> createState() => _SongsScreenState();
 }
 
 class _SongsScreenState extends State<SongsScreen> {
@@ -27,8 +25,8 @@ class _SongsScreenState extends State<SongsScreen> {
     setState(() => _favoriteIds = favs);
   }
 
-  Future<void> _toggleFavorite(String songId) async {
-    await _repository.toggleFavorite(songId);
+  Future<void> _toggleFavorite(Song song) async {
+    await _repository.toggleFavorite(song.id, title: song.title, artist: song.artist.name);
     _loadFavorites();
   }
 
@@ -37,46 +35,45 @@ class _SongsScreenState extends State<SongsScreen> {
     if (!mounted) return;
     showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Додати "${song.title}" у плейлист',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              Expanded(
-                child: playlists.isEmpty
-                    ? const Center(child: Text('Немає плейлистів'))
-                    : ListView.builder(
-                  itemCount: playlists.length,
-                  itemBuilder: (context, index) {
-                    final playlist = playlists[index];
-                    final isAdded = playlist.songs.any((s) => s.id == song.id);
-                    return ListTile(
-                      title: Text(playlist.title),
-                      trailing: isAdded ? const Icon(Icons.check, color: Colors.green) : null,
-                      onTap: isAdded ? null : () async {
-                        playlist.songs.add(song);
-                        await _repository.syncPlaylist(playlist);
-                        if (mounted) Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Додати "${song.title}" у плейлист',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Expanded(
+              child: playlists.isEmpty
+                  ? const Center(child: Text('Немає плейлистів'))
+                  : ListView.builder(
+                itemCount: playlists.length,
+                itemBuilder: (context, index) {
+                  final playlist = playlists[index];
+                  final isAdded = playlist.songs.any((s) => s.id == song.id);
+                  return ListTile(
+                    title: Text(playlist.title),
+                    trailing: isAdded ? const Icon(Icons.check, color: Colors.green) : null,
+                    onTap: isAdded ? null : () async {
+                      playlist.songs.add(song);
+                      await _repository.syncPlaylist(playlist);
+                      if (mounted) Navigator.pop(context);
+                    },
+                  );
+                },
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredSongs = allAvailableSongs.where((s) =>
-        s.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+    final filteredSongs = allAvailableSongs
+        .where((s) => s.title.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Всі пісні')),
@@ -87,8 +84,8 @@ class _SongsScreenState extends State<SongsScreen> {
             child: TextField(
               onChanged: (v) => setState(() => _searchQuery = v),
               decoration: const InputDecoration(
-                  hintText: 'Пошук...',
-                  prefixIcon: Icon(Icons.search)
+                hintText: 'Пошук...',
+                prefixIcon: Icon(Icons.search),
               ),
             ),
           ),
@@ -106,25 +103,18 @@ class _SongsScreenState extends State<SongsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                          icon: Icon(isFav ? Icons.favorite : Icons.favorite_border,
-                              color: isFav ? Colors.green : Colors.grey),
-                          onPressed: () => _toggleFavorite(song.id)
+                        icon: Icon(isFav ? Icons.favorite : Icons.favorite_border,
+                            color: isFav ? Colors.green : Colors.grey),
+                        onPressed: () => _toggleFavorite(song),
                       ),
                       IconButton(
-                          icon: const Icon(Icons.more_vert),
-                          onPressed: () => _showAddToPlaylistMenu(song)
+                        icon: const Icon(Icons.more_vert),
+                        onPressed: () => _showAddToPlaylistMenu(song),
                       ),
                     ],
                   ),
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => SongDetailScreen(
-                            songs: filteredSongs,
-                            initialIndex: index,
-                          )
-                      )
-                  ),
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => SongDetailScreen(songs: filteredSongs, initialIndex: index))),
                 );
               },
             ),

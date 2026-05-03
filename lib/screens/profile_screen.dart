@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../auth_service.dart';
-import '../local_storage.dart';
-import '../mock_data.dart';
 import 'auth_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -12,45 +10,85 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _auth = AuthService();
   String _username = '';
+  bool _biometricEnabled = false;
+  bool _biometricAvailable = false;
 
   @override
   void initState() {
     super.initState();
-    _auth.getUsername().then((u) => setState(() => _username = u));
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final username = await _auth.getUsername();
+    final biometricAvailable = await _auth.isBiometricAvailable();
+    final biometricEnabled = await _auth.hasBiometricSession();
+    setState(() {
+      _username = username;
+      _biometricAvailable = biometricAvailable;
+      _biometricEnabled = biometricEnabled;
+    });
+  }
+
+  Future<void> _toggleBiometric() async {
+    if (_biometricEnabled) {
+      await _auth.disableBiometric();
+      setState(() => _biometricEnabled = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Біометрію вимкнено')),
+      );
+    } else {
+      final ok = await _auth.enableBiometric();
+      setState(() => _biometricEnabled = ok);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ok ? 'Біометрію увімкнено!' : 'Не вдалось увімкнути'),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Профіль')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircleAvatar(radius: 50, child: Icon(Icons.person, size: 50)),
-            const SizedBox(height: 20),
-            Text(_username, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            Text(currentUser.isPremium ? 'Premium Account' : 'Free Account', style: TextStyle(color: Colors.amber[700])),
-            const Divider(height: 40, indent: 50, endIndent: 50),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(children: [Text(currentUser.followersCount.toString(), style: const TextStyle(fontSize: 20)), const Text('Підписники', style: TextStyle(color: Colors.grey))]),
-                Column(children: [Text(currentUser.listeningHours.toString(), style: const TextStyle(fontSize: 20)), const Text('Годин', style: TextStyle(color: Colors.grey))]),
-              ],
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const SizedBox(height: 20),
+          const Center(
+            child: CircleAvatar(radius: 50, child: Icon(Icons.person, size: 50)),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: Text(_username,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 32),
+          const Divider(),
+          if (_biometricAvailable)
+            SwitchListTile(
+              secondary: const Icon(Icons.fingerprint, color: Colors.green),
+              title: const Text('Біометрична авторизація'),
+              subtitle: Text(_biometricEnabled ? 'Увімкнено' : 'Вимкнено'),
+              value: _biometricEnabled,
+              onChanged: (_) => _toggleBiometric(),
             ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () async {
-                await LocalStorage().clearAll();
-                await _auth.logout();
-                if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AuthScreen()));
-              },
-              child: const Text('Вийти з акаунта'),
-            )
-          ],
-        ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Вийти з акаунта',
+                style: TextStyle(color: Colors.red)),
+            onTap: () async {
+              await _auth.logout();
+              if (mounted) {
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => const AuthScreen()));
+              }
+            },
+          ),
+        ],
       ),
     );
   }
